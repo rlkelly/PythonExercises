@@ -1,0 +1,177 @@
+import random as rd
+import sys
+
+def make_move(move, possible_numbers, field, player, plays):
+	string_positions = {1:1,2:5,3:9,4:25,5:29,6:33,7:49,8:53,9:57}
+	
+	x = True
+	while x == True:
+		try:
+			move = int(move)
+			x = False
+		except:
+			move = int(input("NO! That is not a number! Try again: "))
+			x = True
+
+	while move not in possible_numbers:
+		move = int(input("NO! That is not a valid number! Try again: "))
+
+	possible_numbers.remove(move)
+
+	field[string_positions[move]] = player
+	print("".join(field),"\n\n")
+	plays[move-1] = player
+
+def check_win(plays, possible_numbers,winning_conditions):
+	if possible_numbers == []:
+		print("It's a tie! We will meet again...")
+		end = True
+	else:
+		for i in winning_conditions:
+			if plays[i[0]] == plays[i[1]] == plays[i[2]] == "X":
+				print("You have defeated me. You are the superior being.")
+				end = True
+				break
+			elif plays[i[0]] == plays[i[1]] == plays[i[2]] == "O":
+				print("I have defeated you. Bow to me, mortal being!")
+				end = True
+				break
+			else:
+				end = False
+	return end
+
+def find_best_move(possible_numbers,winning_conditions,plays):
+	# Make sure the opponent is blocked
+	best_move = 0
+	for i in winning_conditions:
+		for j in i:
+			if plays[i[0]] == "O" and plays[i[1]] == "O" and plays[i[2]] == "":
+				best_move = i[2] +1
+				break
+			elif plays[i[1]] == "O" and plays[i[2]] == "O" and plays[i[0]] == "":
+				best_move = i[0] +1
+				break
+			elif plays[i[0]] == "O" and plays[i[2]] == "O" and plays[i[1]] == "":
+				best_move = i[1] +1
+				break
+		if best_move != 0:
+			break
+
+	if best_move == 0:
+		for i in winning_conditions:
+			for j in i:
+				if plays[i[0]] == "X" and plays[i[1]] == "X" and plays[i[2]] == "":
+					best_move = i[2] +1
+					break
+				elif plays[i[1]] == "X" and plays[i[2]] == "X" and plays[i[0]] == "":
+					best_move = i[0] +1
+					break
+				elif plays[i[0]] == "X" and plays[i[2]] == "X" and plays[i[1]] == "":
+					best_move = i[1] +1
+					break
+			if best_move != 0:
+				break
+	
+	if best_move == 0 and plays[4] == "":
+		best_move = 5
+
+	crosses = [[0,4,8],[2,4,6]]
+	all_fields = [0,1,2,3,4,5,6,7,8]
+
+	if best_move == 0:
+		for i in crosses:
+			non_cross = all_fields
+			for j in i:
+				if j in non_cross:
+					non_cross.remove(j)
+
+			for j in i:
+				if plays[i[0]] == "X" and plays[i[1]] == "O" and plays[i[2]] == "X":
+					check = False
+					for k in non_cross:
+						if plays[k] == "":
+							check = False
+						else:
+							check = True
+							break
+					if check == False and i == [0,4,8]:
+						best_move = 2
+						break
+					elif check == False and i == [2,4,6]:
+						best_move = 2
+						break
+				elif plays[i[0]] == "O" and plays[i[1]] == "X" and plays[i[2]] == "O":
+					check = False
+					for k in non_cross:
+						if plays[k] == "":
+							check = False
+						else:
+							check = True
+							break
+					if check == False and i == [0,4,8]:
+						best_move = 3
+						break
+					elif check == False and i == [2,4,6]:
+						best_move = 1
+						break
+
+			if best_move != 0:
+				break
+
+	if best_move == 0:
+		best_move = rd.choice(possible_numbers)
+	return best_move
+
+
+
+
+
+
+
+winning_conditions = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]
+
+end = False
+print("LET'S PLAT TIC TAC TOE! YOU CAN BE X, AND I WILL BE O!", "\n")
+
+field = list("   |   |   \n---+---+---\n   |   |   \n---+---+---\n   |   |   ")
+
+print("This is our playing field:")
+print(" 1 | 2 | 3 ")
+print("---+---+---")
+print(" 4 | 5 | 6 ")
+print("---+---+---")
+print(" 7 | 8 | 9 ", "\n")
+
+start = True
+turn = rd.randint(1,2)
+if turn == 1:
+	player = "X"
+elif turn == 2:
+	player = "O"
+
+possible_numbers = [1,2,3,4,5,6,7,8,9]
+plays = [""] *9
+
+while start == True:
+	if turn == 1:
+		print("You can start.")
+		make_move(input("Choose a spot: "), possible_numbers, field, player,plays)
+		turn = 2
+	elif turn == 2:
+		print("The computer will start:")
+		make_move(rd.choice([1,3,7,9]), possible_numbers, field, player,plays)
+		turn = 1
+	start = False
+
+while end == False:
+	if turn == 1:
+		player = "X"
+		make_move(input("Choose a spot: "), possible_numbers, field, player, plays)
+		turn = 2
+	elif turn == 2:
+		print("Good move! How about this?")
+		player = "O"
+		make_move(find_best_move(possible_numbers,winning_conditions,plays), possible_numbers, field, player, plays)
+		turn = 1
+	if check_win(plays, possible_numbers,winning_conditions) == True:
+		end = True
